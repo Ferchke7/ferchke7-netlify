@@ -38,8 +38,8 @@ export default function Project() {
                 });
                 setProjects(sortedProjects)
             })
-        console.log(projects)
-    },[])
+
+    },[projects])
 
 
     const cards = projects.map((project) => (
