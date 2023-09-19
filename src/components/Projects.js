@@ -62,7 +62,10 @@ export default function Project() {
         </Card>
     ));
     return (
+
+
         <Container py="xl">
+            <Text size="xl">#PROJECTS</Text>
             <SimpleGrid cols={2} breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
                 {cards}
             </SimpleGrid>

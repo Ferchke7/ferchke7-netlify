@@ -1,11 +1,11 @@
 
 import './App.css';
 import {BrowserRouter, Link, Route,Routes} from "react-router-dom";
-import Home from "./components/Home";
+
 import About from "./components/About";
 import Project from "./components/Projects";
 import {MantineProvider, Tabs} from "@mantine/core";
-import Contact from "./components/Contact";
+
 
 function App() {
   return (
@@ -13,26 +13,26 @@ function App() {
           fontFamily: 'Verdana, sans-serif',
           fontFamilyMonospace: 'Monaco, Courier, monospace',
           headings: { fontFamily: 'Greycliff CF, sans-serif' },}} withGlobalStyles withNormalizeCSS>
-
           <BrowserRouter>
-              <Tabs color="gray.5" defaultValue="about" >
+              <Tabs variant="outline" color="gray.5" defaultValue="about" >
               <Tabs.List>
+                  <Link color="white" to="/about">
                   <Tabs.Tab value="about" to="/about">
-                      <Link color="white" to="/about">About me</Link>
+                      About me
                   </Tabs.Tab>
+                  </Link>
+                  <Link to="/projects">
                   <Tabs.Tab value="projects">
-                      <Link to="/projects">Projects</Link>
+                      Projects
                   </Tabs.Tab>
-                  <Tabs.Tab value="contact" ml="auto">
-                      <Link to="/contact">Contact me</Link>
-                  </Tabs.Tab>
+                  </Link>
+
               </Tabs.List>
               </Tabs>
               <Routes>
-                  <Route path="/" element={<Home />} />
+                  <Route path="/" element={<About />} />
                   <Route path="/projects" element={<Project />} />
                   <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={< Contact />} />
               </Routes>
           </BrowserRouter>
 
