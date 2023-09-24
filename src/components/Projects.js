@@ -25,6 +25,7 @@ const useStyles = createStyles((theme) => ({
 }));
 export default function Project() {
     const [projects, setProjects] = useState([]);
+    const [numOfStats, setNumOfStats] = useState(0);
     const { classes } = useStyles();
     useEffect(() => {
         fetch("https://api.github.com/users/Ferchke7/repos")
@@ -34,14 +35,22 @@ export default function Project() {
                 const sortedProjects = pWithD.sort((a, b) => {
                     const dateA = new Date(a.pushed_at);
                     const dateB = new Date(b.pushed_at);
+
                     return dateB - dateA;
                 });
                 setProjects(sortedProjects)
+                setNumOfStats(sortedProjects.length)
             })
 
     },[projects])
 
-
+    const numProjects = (
+        <Card withBorder radius="md" padding="xl" bg="var(--mantine-color-body">
+            <Text fz="xs" tt="uppercase" fw={700} c="dimmed">
+               Number of completed projects {numOfStats}
+            </Text>
+        </Card>
+    )
     const cards = projects.map((project) => (
 
         <Card key={project.description} p="md" radius="md" component="a" href={project.html_url} className={classes.card}>
@@ -69,6 +78,7 @@ export default function Project() {
             <SimpleGrid cols={2} breakpoints={[{ maxWidth: 'sm', cols: 1 }]}>
                 {cards}
             </SimpleGrid>
+            {numProjects}
         </Container>
     )
 }
