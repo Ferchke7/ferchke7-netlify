@@ -38,7 +38,7 @@ export default function About() {
                         based in South Korea. At the moment I'm a searching a job as a junior software engineer,
                         and in my free-time I read a books, create personal projects. Mostly using
                         Java,
-                        C#, JavaScript. And frameworks like: Springboot, Reactjs;
+                        C#, JavaScript. And frameworks like: Springboot, Reactjs, Asp.net core;
                     </Text>
                 <Container>
                     <Anchor component={Link} to={"https://github.com/Ferchke7"}>
