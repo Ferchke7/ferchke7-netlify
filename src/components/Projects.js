@@ -55,7 +55,7 @@ export default function Project() {
 
         <Card key={project.description} p="md" radius="md" component="a" href={project.html_url} className={classes.card}>
             <AspectRatio ratio={1920 / 1080}>
-                <Image src="https://images.pexels.com/photos/4439901/pexels-photo-4439901.jpeg" />
+                <Image src="https://wallpapers.com/images/hd/coding-background-9izlympnd0ovmpli.jpg" />
             </AspectRatio>
             <IconBrandGithub />
             <Text color="dimmed" size="xs" transform="uppercase" weight={700} mt="md">
