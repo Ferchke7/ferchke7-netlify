@@ -1,42 +1,47 @@
-
 import './App.css';
-import {BrowserRouter, Link, Route,Routes} from "react-router-dom";
+import { BrowserRouter, Link, NavLink, Route, Routes } from "react-router-dom";
 
 import About from "./components/About";
-import Project from "./components/Projects";
-import {MantineProvider, Tabs} from "@mantine/core";
-
+import Activity from "./components/Activity";
+import { MantineProvider } from "@mantine/core";
 
 function App() {
   return (
-      <MantineProvider theme={{ colorScheme: 'dark',
-          fontFamily: 'Verdana, sans-serif',
-          fontFamilyMonospace: 'Monaco, Courier, monospace',
-          headings: { fontFamily: 'Greycliff CF, sans-serif' },}} withGlobalStyles withNormalizeCSS>
-          <BrowserRouter>
-              <Tabs variant="outline" color="gray.5" defaultValue="about" >
-              <Tabs.List>
-                  <Link color="white" to="/about">
-                  <Tabs.Tab value="about" to="/about">
-                      About me
-                  </Tabs.Tab>
-                  </Link>
-                  <Link to="/projects">
-                  <Tabs.Tab value="projects">
-                      Projects
-                  </Tabs.Tab>
-                  </Link>
+    <MantineProvider
+      theme={{
+        colorScheme: 'dark',
+        fontFamily: 'Inter, Verdana, sans-serif',
+        fontFamilyMonospace: 'JetBrains Mono, Monaco, Courier, monospace',
+        headings: { fontFamily: 'Inter, Greycliff CF, sans-serif' },
+      }}
+      withGlobalStyles
+      withNormalizeCSS
+    >
+      <BrowserRouter>
+        <div className="portfolio-shell">
+          <header className="site-header">
+            <Link className="brand-mark" to="/about" aria-label="Ferdavs Majitov home">
+              FM
+            </Link>
 
-              </Tabs.List>
-              </Tabs>
-              <Routes>
-                  <Route path="/" element={<About />} />
-                  <Route path="/projects" element={<Project />} />
-                  <Route path="/about" element={<About />} />
-              </Routes>
-          </BrowserRouter>
+            <nav className="site-nav" aria-label="Main navigation">
+              <NavLink to="/about" className={({ isActive }) => isActive ? "nav-link nav-link-active" : "nav-link"}>
+                About
+              </NavLink>
+              <NavLink to="/activity" className={({ isActive }) => isActive ? "nav-link nav-link-active" : "nav-link"}>
+                Activity
+              </NavLink>
+            </nav>
+          </header>
 
-      </MantineProvider>
+          <Routes>
+            <Route path="/" element={<About />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/activity" element={<Activity />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </MantineProvider>
   );
 }
 
