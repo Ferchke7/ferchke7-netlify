@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getGithubEvents, getGithubRepositories, getMergedPullRequests } from "../api/github";
+import { getGithubActivityBundle, readGithubActivityCache, writeGithubActivityCache } from "../api/github";
 import { resumeProfile } from "../data/resumeProfile";
 
 const EMPTY_PR_METRICS = { total: 0, items: [] };
@@ -66,6 +66,56 @@ function getMonthlyActivity(projects) {
         .map(([month, total]) => ({ month, total }));
 }
 
+function getEventTypeDistribution(events) {
+    const counts = events.reduce((result, event) => {
+        if (!event.type) {
+            return result;
+        }
+
+        result[event.type] = (result[event.type] || 0) + 1;
+        return result;
+    }, {});
+
+    return Object.entries(counts)
+        .sort(([, totalA], [, totalB]) => totalB - totalA)
+        .slice(0, 8)
+        .map(([name, value]) => ({ name, value }));
+}
+
+function getRepositoryImpact(projects) {
+    return [...projects]
+        .sort((a, b) => ((b.stargazers_count || 0) + (b.forks_count || 0)) - ((a.stargazers_count || 0) + (a.forks_count || 0)))
+        .slice(0, 8)
+        .map((project) => ({
+            forks: project.forks_count || 0,
+            name: project.name,
+            stars: project.stargazers_count || 0,
+        }));
+}
+
+function getFreshRepositories(projects) {
+    return sortByLatestPush(projects)
+        .slice(0, 8)
+        .map((project) => ({
+            date: project.pushed_at,
+            name: project.name,
+            value: Math.max(1, Math.round((Date.now() - new Date(project.pushed_at || 0).getTime()) / 86400000)),
+        }));
+}
+
+function getPullRequestsByRepository(mergedPullRequests) {
+    const groups = mergedPullRequests.items.reduce((result, item) => {
+        const repositoryName = getRepositoryNameFromApiUrl(item.repository_url);
+        result[repositoryName] = (result[repositoryName] || 0) + 1;
+        return result;
+    }, {});
+
+    return Object.entries(groups)
+        .sort(([, totalA], [, totalB]) => totalB - totalA)
+        .slice(0, 8)
+        .map(([name, value]) => ({ name, value }));
+}
+
 function getSiteUrl(project) {
     if (project.homepage) {
         return project.homepage;
@@ -93,14 +143,18 @@ function getLiveSites(projects) {
         }));
 }
 
-function buildChartData(projects) {
+function buildChartData(projects, events, mergedPullRequests) {
     const languageDistribution = getLanguageDistribution(projects);
     const monthlyActivity = getMonthlyActivity(projects);
 
     return {
+        eventTypes: getEventTypeDistribution(events),
+        freshness: getFreshRepositories(projects),
         languageDistribution,
         monthlyActivity,
+        pullRequestsByRepository: getPullRequestsByRepository(mergedPullRequests),
         radar: resumeProfile.skillClusters,
+        repositoryImpact: getRepositoryImpact(projects),
     };
 }
 
@@ -163,38 +217,32 @@ function getMergedPullRequestList(mergedPullRequests) {
 }
 
 export function useGithubActivity() {
-    const [repositories, setRepositories] = useState([]);
-    const [events, setEvents] = useState([]);
-    const [mergedPullRequests, setMergedPullRequests] = useState(EMPTY_PR_METRICS);
-    const [isLoading, setIsLoading] = useState(true);
+    const cachedBundle = readGithubActivityCache();
+    const [repositories, setRepositories] = useState(sortByLatestPush(cachedBundle?.repositories || []));
+    const [events, setEvents] = useState(cachedBundle?.events || []);
+    const [mergedPullRequests, setMergedPullRequests] = useState(cachedBundle?.mergedPullRequests || EMPTY_PR_METRICS);
+    const [isLoading, setIsLoading] = useState(!cachedBundle);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
+        setIsLoading(true);
 
-        Promise.allSettled([getGithubRepositories(), getGithubEvents(), getMergedPullRequests()])
-            .then((results) => {
+        getGithubActivityBundle()
+            .then((bundle) => {
                 if (!isMounted) {
                     return;
                 }
 
-                const [repoResult, eventResult, prResult] = results;
-                const failures = results.filter((result) => result.status === "rejected");
-
-                if (repoResult.status === "fulfilled") {
-                    setRepositories(sortByLatestPush(repoResult.value));
-                }
-
-                if (eventResult.status === "fulfilled") {
-                    setEvents(eventResult.value);
-                }
-
-                if (prResult.status === "fulfilled") {
-                    setMergedPullRequests(prResult.value);
-                }
-
-                if (failures.length) {
-                    setError(failures[0].reason);
+                setRepositories(sortByLatestPush(bundle.repositories));
+                setEvents(bundle.events);
+                setMergedPullRequests(bundle.mergedPullRequests);
+                setError(bundle.errors.length ? new Error(bundle.errors[0].message) : null);
+                writeGithubActivityCache(bundle);
+            })
+            .catch((requestError) => {
+                if (isMounted) {
+                    setError(requestError);
                 }
             })
             .finally(() => {
@@ -241,8 +289,8 @@ export function useGithubActivity() {
     }, [describedRepositories, events, liveSites, mergedPullRequests]);
 
     const chartData = useMemo(
-        () => buildChartData(describedRepositories),
-        [describedRepositories]
+        () => buildChartData(describedRepositories, events, mergedPullRequests),
+        [describedRepositories, events, mergedPullRequests]
     );
 
     const contributionGroups = useMemo(

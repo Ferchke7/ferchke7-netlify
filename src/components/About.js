@@ -11,6 +11,7 @@ import {
     IconMail,
     IconRocket,
     IconServer,
+    IconSparkles,
     IconTopologyStar3,
 } from "@tabler/icons-react";
 import { useMemo } from "react";
@@ -100,6 +101,98 @@ function getNeonChartOptions(chartData) {
                 },
             ],
         },
+        events: {
+            backgroundColor: "transparent",
+            color: ["#25f4ee", "#ff3ea5", "#a3ff12", "#9d6cff", "#ffd166"],
+            tooltip: { trigger: "item" },
+            series: [
+                {
+                    type: "pie",
+                    roseType: "radius",
+                    radius: ["18%", "72%"],
+                    center: ["50%", "52%"],
+                    label: { color: textColor },
+                    labelLine: { lineStyle: { color: "rgba(255,255,255,.35)" } },
+                    data: chartData.eventTypes.length ? chartData.eventTypes : [{ name: "Waiting for API", value: 1 }],
+                },
+            ],
+        },
+        pullRequestsByRepository: {
+            backgroundColor: "transparent",
+            color: ["#ff3ea5"],
+            tooltip: { trigger: "axis" },
+            grid: { left: 120, right: 20, top: 20, bottom: 24 },
+            xAxis: {
+                type: "value",
+                minInterval: 1,
+                splitLine: { lineStyle: { color: "rgba(255,255,255,.08)" } },
+                axisLabel: { color: mutedColor },
+            },
+            yAxis: {
+                type: "category",
+                data: chartData.pullRequestsByRepository.map((item) => item.name),
+                axisLabel: { color: mutedColor, width: 112, overflow: "truncate" },
+                axisLine: { lineStyle: { color: "rgba(255,255,255,.18)" } },
+            },
+            series: [
+                {
+                    type: "bar",
+                    data: chartData.pullRequestsByRepository.map((item) => item.value),
+                    itemStyle: { borderRadius: [0, 8, 8, 0], shadowBlur: 18, shadowColor: "rgba(255,62,165,.36)" },
+                },
+            ],
+        },
+        impact: {
+            backgroundColor: "transparent",
+            color: ["#25f4ee", "#ffd166"],
+            tooltip: { trigger: "axis" },
+            legend: { bottom: 0, textStyle: { color: mutedColor } },
+            grid: { left: 38, right: 16, top: 20, bottom: 54 },
+            xAxis: {
+                type: "category",
+                data: chartData.repositoryImpact.map((item) => item.name),
+                axisLabel: { color: mutedColor, rotate: 28, width: 80, overflow: "truncate" },
+                axisLine: { lineStyle: { color: "rgba(255,255,255,.18)" } },
+            },
+            yAxis: {
+                type: "value",
+                minInterval: 1,
+                splitLine: { lineStyle: { color: "rgba(255,255,255,.08)" } },
+                axisLabel: { color: mutedColor },
+            },
+            series: [
+                { name: "Stars", type: "bar", stack: "impact", data: chartData.repositoryImpact.map((item) => item.stars) },
+                { name: "Forks", type: "bar", stack: "impact", data: chartData.repositoryImpact.map((item) => item.forks) },
+            ],
+        },
+        freshness: {
+            backgroundColor: "transparent",
+            color: ["#a3ff12"],
+            tooltip: {
+                trigger: "axis",
+                formatter: (params) => `${params[0].name}<br/>${params[0].value} days since last push`,
+            },
+            grid: { left: 120, right: 20, top: 20, bottom: 24 },
+            xAxis: {
+                type: "value",
+                splitLine: { lineStyle: { color: "rgba(255,255,255,.08)" } },
+                axisLabel: { color: mutedColor },
+            },
+            yAxis: {
+                type: "category",
+                inverse: true,
+                data: chartData.freshness.map((item) => item.name),
+                axisLabel: { color: mutedColor, width: 112, overflow: "truncate" },
+                axisLine: { lineStyle: { color: "rgba(255,255,255,.18)" } },
+            },
+            series: [
+                {
+                    type: "bar",
+                    data: chartData.freshness.map((item) => item.value),
+                    itemStyle: { borderRadius: [0, 8, 8, 0], shadowBlur: 16, shadowColor: "rgba(163,255,18,.28)" },
+                },
+            ],
+        },
     };
 }
 
@@ -112,7 +205,7 @@ function formatDate(dateValue) {
 }
 
 export default function About() {
-    const { chartData, contributionGroups, error, isLoading, mergedPullRequestList, stats } = useGithubActivity();
+    const { chartData, contributionGroups, isLoading, mergedPullRequestList, stats } = useGithubActivity();
     const chartOptions = useMemo(() => getNeonChartOptions(chartData), [chartData]);
     const latestProjectName = stats.latestProject?.name || "GitHub repositories";
     const latestProjectDate = stats.latestProject
@@ -147,8 +240,9 @@ export default function About() {
     ];
 
     return (
-        <Container size="lg" py="xl">
-            <section className="hero-section">
+        <main>
+            <section className="landing-hero">
+                <Container size="lg" className="landing-hero-inner">
                 <div className="hero-copy">
                     <Badge className="status-badge" leftSection={<IconRocket size={14} />}>
                         {resumeProfile.role}
@@ -158,6 +252,11 @@ export default function About() {
                     </Title>
                     <Text className="hero-subtitle">
                         {resumeProfile.summary}
+                    </Text>
+
+                    <Text className="hero-note">
+                        I like backend systems that are boring in production: explicit boundaries, reliable message flow,
+                        clean persistence, and dashboards that make operational work easier to understand.
                     </Text>
 
                     <Group spacing="xs" className="skill-badge-row">
@@ -184,33 +283,36 @@ export default function About() {
                     </Group>
                 </div>
 
-                <div className="profile-orbit">
-                    <Avatar className="profile-avatar" src={MyImage} radius="50%" size={190} />
-                    <div className="orbit-chip chip-react">Kafka</div>
-                    <div className="orbit-chip chip-dotnet">.NET</div>
-                    <div className="orbit-chip chip-java">DDD</div>
-                </div>
+                <aside className="hero-proof-panel">
+                    <div className="profile-orbit">
+                        <Avatar className="profile-avatar" src={MyImage} radius="50%" size={190} />
+                        <div className="orbit-chip chip-react">Kafka</div>
+                        <div className="orbit-chip chip-dotnet">.NET</div>
+                        <div className="orbit-chip chip-java">DDD</div>
+                    </div>
+
+                    <div className="hero-proof-grid">
+                        {metricCards.map((item) => (
+                            <article key={item.title}>
+                                <Text>{item.title}</Text>
+                                <strong>{item.stat}</strong>
+                            </article>
+                        ))}
+                    </div>
+
+                    <div className="availability-card">
+                        <IconSparkles size={20} />
+                        <Text>Open to backend-heavy full-stack roles, distributed systems work, and open-source collaboration.</Text>
+                    </div>
+                </aside>
+                </Container>
             </section>
 
-            <section className="stats-strip" aria-label="GitHub metrics">
-                {metricCards.map((item) => (
-                    <article key={item.title}>
-                        <Text>{item.title}</Text>
-                        <strong>{item.stat}</strong>
-                    </article>
-                ))}
-            </section>
-
-            {error && (
-                <div className="api-warning">
-                    <Text>GitHub API is partially unavailable. The page stays usable with the public metrics that loaded.</Text>
-                </div>
-            )}
-
+            <Container size="lg" py="xl">
             <section className="section-block">
                 <div className="section-heading">
                     <Badge variant="outline" color="cyan">Open-source contributions</Badge>
-                    <Title order={2}>Merged pull requests with links</Title>
+                    <Title order={2}>Merged pull requests, newest first</Title>
                 </div>
 
                 {isLoading ? (
@@ -286,7 +388,7 @@ export default function About() {
                     <Badge variant="outline" color="pink" leftSection={<IconTopologyStar3 size={14} />}>
                         Apache ECharts
                     </Badge>
-                    <Title order={2}>Activity dashboard</Title>
+                    <Title order={2}>Live engineering signals</Title>
                 </div>
 
                 <SimpleGrid cols={3} breakpoints={[{ maxWidth: "md", cols: 1 }]} spacing="lg">
@@ -302,25 +404,53 @@ export default function About() {
                         <Title order={3}>Engineering focus</Title>
                         <NeonChart option={chartOptions.radar} />
                     </article>
+                    <article className="chart-panel">
+                        <Title order={3}>GitHub event types</Title>
+                        <NeonChart option={chartOptions.events} />
+                    </article>
+                    <article className="chart-panel chart-panel-wide">
+                        <Title order={3}>Merged PRs by repository</Title>
+                        <NeonChart option={chartOptions.pullRequestsByRepository} />
+                    </article>
+                    <article className="chart-panel chart-panel-wide">
+                        <Title order={3}>Repository stars and forks</Title>
+                        <NeonChart option={chartOptions.impact} />
+                    </article>
+                    <article className="chart-panel chart-panel-wide">
+                        <Title order={3}>Recently pushed repositories</Title>
+                        <NeonChart option={chartOptions.freshness} />
+                    </article>
                 </SimpleGrid>
             </section>
 
-            <section className="section-block focus-section">
+            <section className="section-block closing-section">
                 <div className="section-heading">
-                    <Badge variant="outline" color="violet" leftSection={<IconCode size={14} />}>
-                        Engineering focus
-                    </Badge>
-                    <Title order={2}>What I usually build</Title>
+                    <Badge variant="outline" color="violet" leftSection={<IconCode size={14} />}>Contact</Badge>
+                    <Title order={2}>Let's build something reliable</Title>
                 </div>
 
-                <SimpleGrid cols={2} breakpoints={[{ maxWidth: "sm", cols: 1 }]} spacing="lg">
-                    {resumeProfile.engineeringFocus.map((item) => (
-                        <article className="focus-card" key={item}>
-                            <Text>{item}</Text>
-                        </article>
-                    ))}
-                </SimpleGrid>
+                <div className="closing-card">
+                    <Text>
+                        If the work involves APIs, distributed workflows, data consistency, or turning complex backend
+                        behavior into a clear product surface, that is exactly where I like to be useful.
+                    </Text>
+                    <Group spacing="sm" className="hero-actions">
+                        <Anchor className="social-link" href={resumeProfile.github} target="_blank" rel="noreferrer">
+                            <IconBrandGithubFilled size={20} />
+                            GitHub
+                        </Anchor>
+                        <Anchor className="social-link" href={resumeProfile.linkedin} target="_blank" rel="noreferrer">
+                            <IconBrandLinkedin size={20} />
+                            LinkedIn
+                        </Anchor>
+                        <Anchor className="social-link" href={`mailto:${resumeProfile.email}`}>
+                            <IconMail size={20} />
+                            Email
+                        </Anchor>
+                    </Group>
+                </div>
             </section>
         </Container>
+        </main>
     )
 }
